@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:7
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - DB_NAME=mathlens
+      - JWT_SECRET=${JWT_SECRET:-change-me-to-a-random-secret}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - FROM_EMAIL=${FROM_EMAIL:-noreply@humanoidmaker.com}
+      - FRONTEND_URL=http://localhost:3000
+      - MODEL_NAME=microsoft/trocr-base-handwritten
+      - USE_GPU=${USE_GPU:-false}
+    depends_on:
+      - mongodb
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
