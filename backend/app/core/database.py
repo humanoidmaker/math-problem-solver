@@ -22,3 +22,7 @@ async def close_db():
 
 def get_db():
     return db
+
+
+# Alias for compatibility
+init_db = connect_db
